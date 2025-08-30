@@ -315,6 +315,13 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
         super.onDestroy();
     }
 
+    public static void startGpsProvider(Context context) {
+        context.startService(
+                new Intent(context, USBGpsProviderService.class)
+                        .setAction(ACTION_START_GPS_PROVIDER)
+        );
+    }
+
     /**
      * Checks if the applications has the given runtime permission
      */
