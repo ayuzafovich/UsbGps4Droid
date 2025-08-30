@@ -8,6 +8,7 @@ providing GPS support for devices down to android 4.0
 ## Features from this fork
 - Auto start service on USB device attachment.
 - No more permission confirmations to use the USB device.
+- Tested with the Geely Monjaro (2025 model).
 
 ## About
 The application provides location updates to Android which allows devices without 
@@ -30,17 +31,6 @@ tested as working with [GlobalSat BU-353-S4](http://usglobalsat.com/p-688-bu-353
 - Support for any SiRF USB GPS device
 
 ## Usage
-
-### USB Permissions Popup
-**Unless your ROM is modified then Android will ask permission to use your USB GPS device 
-everytime you reconnect it**
-
-If your device is rooted, then you can follow [this tutorial](https://stackoverflow.com/a/30563253/1741602) 
-in order to surpress the USB permission popup system wide and grant permission everytime automatically.
-
-If your device is not rooted, then there is nothing I can do. This is unfortunately a limitation of 
-the android operating system. If this is for an embedded system I highly recommend rooting the device
-and following the tutoial.
 
 ### Connecting a USB GPS to your device
 - A USB GPS device can connect to an Android device's charging port, with a USB OTG adapter, if your device supports 
