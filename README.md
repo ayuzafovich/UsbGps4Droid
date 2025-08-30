@@ -5,7 +5,9 @@
 UsbGps4Droid is a USB GPS provider application for the Android operating system,
 providing GPS support for devices down to android 4.0
 
-[Download latest release](../../releases)
+## Features from this fork
+- Auto start service on USB device attachment.
+- No more permission confirmations to use the USB device.
 
 ## About
 The application provides location updates to Android which allows devices without 
