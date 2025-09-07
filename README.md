@@ -1,7 +1,9 @@
 <img align="right" alt="App icon" src="app-icon.png" height="115px">
 
-# UsbGps4Droid - A USB GPS provider for Android 
+# Download APK
+https://github.com/ayuzafovich/UsbGps4Droid/releases/download/release/UsbGps4Droid-v2.2.1_Julia.apk
 
+# UsbGps4Droid - A USB GPS provider for Android 
 UsbGps4Droid is a USB GPS provider application for the Android operating system,
 providing GPS support for devices down to android 4.0
 
