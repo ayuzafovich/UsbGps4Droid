@@ -145,31 +145,43 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
     private NotificationManager notificationManager;
 
     /**
-     * Will start the service if set so in settings when the device boots
+     * Will start the service if set so in settings when the device boots, and restarts it after
+     * an app update. Units that only suspend to RAM never send BOOT_COMPLETED, so the sticky
+     * service restart in {@link #onStartCommand} is what keeps the provider alive there.
      */
     public static class BootReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, Intent intent) {
             SharedPreferences sharedPreferences =
                     PreferenceManager.getDefaultSharedPreferences(context);
-            if (BuildConfig.DEBUG) Log.d(LOG_TAG, intent.getAction());
+            final String action = intent != null ? intent.getAction() : null;
+            if (BuildConfig.DEBUG) Log.d(LOG_TAG, String.valueOf(action));
 
-            if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) &&
-                    sharedPreferences.getBoolean(PREF_START_ON_BOOT, false))  {
-                new Handler(context.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (BuildConfig.DEBUG) Log.d(LOG_TAG, "Boot start");
-                        Intent serviceIntent = new Intent(context, USBGpsProviderService.class)
-                                .setAction(ACTION_START_GPS_PROVIDER);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            context.startForegroundService(serviceIntent);
-                        } else {
-                            context.startService(serviceIntent);
-                        }
-                    }
-                }, 2000);
+            if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+                if (!sharedPreferences.getBoolean(PREF_START_ON_BOOT, false)) {
+                    return;
+                }
+            } else if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
+                if (!sharedPreferences.getBoolean(PREF_START_GPS_PROVIDER, false)) {
+                    return;
+                }
+            } else {
+                return;
             }
+
+            new Handler(context.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (BuildConfig.DEBUG) Log.d(LOG_TAG, "Boot start");
+                    Intent serviceIntent = new Intent(context, USBGpsProviderService.class)
+                            .setAction(ACTION_START_GPS_PROVIDER);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent);
+                    } else {
+                        context.startService(serviceIntent);
+                    }
+                }
+            }, 2000);
         }
     }
 
@@ -183,6 +195,10 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
     public int onStartCommand(Intent intent, int flags, int startId) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor edit = sharedPreferences.edit();
+
+        // A null intent means the system is restarting a sticky service after the process was
+        // killed (a suspended rather than rebooted head unit never sends BOOT_COMPLETED).
+        final String action = intent != null ? intent.getAction() : null;
 
         debugToasts = sharedPreferences.getBoolean(PREF_TOAST_LOGGING, false);
 
@@ -198,10 +214,13 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
                 )
         );
 
-        Log.w("UsbGpsService", "onStartCommand action=" + (intent != null ? intent.getAction() : "null") +
+        Log.w("UsbGpsService", "onStartCommand action=" + (action != null ? action : "null") +
                 " VID=" + vendorId + " PID=" + productId);
 
-        if (ACTION_START_GPS_PROVIDER.equals(intent.getAction())) {
+        boolean startProvider = ACTION_START_GPS_PROVIDER.equals(action)
+                || (action == null && sharedPreferences.getBoolean(PREF_START_GPS_PROVIDER, false));
+
+        if (startProvider) {
             // Must call startForeground() immediately to avoid ForegroundServiceDidNotStartInTimeException
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 notificationManager.createNotificationChannel(
@@ -299,13 +318,13 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
                 // We received a start intent even though it's already running so restart
                 stopSelf();
                 startService(new Intent(this, USBGpsProviderService.class)
-                        .setAction(intent.getAction()));
+                        .setAction(ACTION_START_GPS_PROVIDER));
             }
 
-        } else if (ACTION_START_TRACK_RECORDING.equals(intent.getAction())) {
+        } else if (ACTION_START_TRACK_RECORDING.equals(action)) {
             startTracking();
 
-        } else if (ACTION_STOP_TRACK_RECORDING.equals(intent.getAction())) {
+        } else if (ACTION_STOP_TRACK_RECORDING.equals(action)) {
             if (gpsManager != null) {
                 gpsManager.removeNmeaListener(this);
                 endTrack();
@@ -316,15 +335,15 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
                 edit.commit();
             }
 
-        } else if (ACTION_STOP_GPS_PROVIDER.equals(intent.getAction())) {
+        } else if (ACTION_STOP_GPS_PROVIDER.equals(action)) {
             if (sharedPreferences.getBoolean(PREF_START_GPS_PROVIDER, true)) {
                 edit.putBoolean(PREF_START_GPS_PROVIDER, false);
                 edit.commit();
             }
             stopSelf();
 
-        } else if (ACTION_CONFIGURE_SIRF_GPS.equals(intent.getAction()) ||
-                ACTION_ENABLE_SIRF_GPS.equals(intent.getAction())) {
+        } else if (ACTION_CONFIGURE_SIRF_GPS.equals(action) ||
+                ACTION_ENABLE_SIRF_GPS.equals(action)) {
             if (gpsManager != null) {
                 Bundle extras = intent.getExtras();
                 if (extras != null) {
@@ -334,7 +353,7 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
                 }
             }
 
-        } else if (ACTION_UBX_CONFIGURE.equals(intent.getAction())) {
+        } else if (ACTION_UBX_CONFIGURE.equals(action)) {
             if (gpsManager != null) {
                 Bundle extras = intent.getExtras();
                 if (extras != null) {
@@ -356,18 +375,20 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
                 }
             }
 
-        } else if (ACTION_UBX_SAVE_CONFIG.equals(intent.getAction())) {
+        } else if (ACTION_UBX_SAVE_CONFIG.equals(action)) {
             if (gpsManager != null) {
                 gpsManager.saveUbxConfig();
             }
 
-        } else if (ACTION_UBX_RESET_RECEIVER.equals(intent.getAction())) {
+        } else if (ACTION_UBX_RESET_RECEIVER.equals(action)) {
             if (gpsManager != null) {
                 String resetType = intent.getStringExtra(EXTRA_UBX_RESET_TYPE);
                 gpsManager.resetReceiver(resetType != null ? resetType : "hot");
             }
         }
-        return Service.START_NOT_STICKY;
+        // Sticky so the provider comes back by itself if the process is killed while the
+        // head unit sleeps; a suspended unit never sends BOOT_COMPLETED to restart it.
+        return Service.START_STICKY;
     }
 
     @Override

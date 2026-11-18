@@ -45,6 +45,10 @@ On top of the v3.x upstream code this fork adds head-unit friendly behaviour:
   Controlled by **Settings → Service → "Start service on USB connect"**, enabled by default.
 - **Extra USB VID/PID entries** in the attach filter for the serial receivers found in
   car head units.
+- **Survives head-unit deep sleep** — the provider service is sticky, so if the unit kills the
+  process while suspended the system restarts it; it also restarts itself after an app update
+  (`MY_PACKAGE_REPLACED`). A unit that only suspends never sends `BOOT_COMPLETED`, which is why
+  "Start service on boot" alone cannot cover it.
 - Tested on the **Geely Monjaro (2025)** head unit.
 
 ## Supported hardware
