@@ -166,6 +166,9 @@
     <string name="pref_start_on_boot_summary_off">Usb Gps service will not try and start when android starts</string>
     <string name="pref_start_on_boot_title">Start service on boot</string>
 
+    <string name="pref_start_on_usb_summary">If enabled, the USB GPS service will be automatically started when a GPS receiver is connected</string>
+    <string name="pref_start_on_usb_title">Start service on USB connect</string>
+
     <string name="pref_category_device_title">Device</string>
     <string name="pref_category_service_title">Service</string>
     <string name="pref_category_sirf_title">SiRF</string>

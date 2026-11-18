@@ -42,6 +42,7 @@ On top of the v3.x upstream code this fork adds head-unit friendly behaviour:
   be delivered to an activity, never to a broadcast receiver), has a floating, fully transparent
   window with no preview and no animation, and removes its task about 300 ms later, so nothing
   is drawn and the launcher never gets covered.
+  Controlled by **Settings → Service → "Start service on USB connect"**, enabled by default.
 - **Extra USB VID/PID entries** in the attach filter for the serial receivers found in
   car head units.
 - Tested on the **Geely Monjaro (2025)** head unit.

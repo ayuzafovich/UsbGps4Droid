@@ -8,6 +8,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.preference.PreferenceManager;
+
+import org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService;
+
 /**
  * Started by the system when a matching USB device is attached: USB_DEVICE_ATTACHED is only
  * ever delivered to an activity, never to a broadcast receiver. This activity has no window of
@@ -21,16 +25,23 @@ public class TransparentActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startGpsProvider(this);
 
-        long delay = UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(getIntent().getAction())
-                ? FINISH_DELAY_MS
-                : 0;
+        boolean usbAttached =
+                UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(getIntent().getAction());
+        if (!usbAttached || shouldStartOnUsb()) {
+            startGpsProvider(this);
+        }
+
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 finishAndRemoveTask();
             }
-        }, delay);
+        }, usbAttached ? FINISH_DELAY_MS : 0);
+    }
+
+    private boolean shouldStartOnUsb() {
+        return PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(USBGpsProviderService.PREF_START_ON_USB, true);
     }
 }

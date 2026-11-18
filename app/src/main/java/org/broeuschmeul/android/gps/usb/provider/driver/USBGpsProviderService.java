@@ -99,6 +99,7 @@ public class USBGpsProviderService extends Service implements USBGpsManager.Nmea
 
     public static final String PREF_START_GPS_PROVIDER = "startGps";
     public static final String PREF_START_ON_BOOT = "startOnBoot";
+    public static final String PREF_START_ON_USB = "startOnUsb";
     public static final String PREF_GPS_LOCATION_PROVIDER = "gpsLocationProviderKey";
     public static final String PREF_REPLACE_STD_GPS = "replaceStdtGps";
     public static final String PREF_FORCE_ENABLE_PROVIDER = "forceEnableProvider";
