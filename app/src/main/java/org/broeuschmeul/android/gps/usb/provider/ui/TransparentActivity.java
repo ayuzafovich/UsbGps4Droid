@@ -1,36 +1,36 @@
 package org.broeuschmeul.android.gps.usb.provider.ui;
 
 import static org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService.startGpsProvider;
-import static org.broeuschmeul.android.gps.usb.provider.ui.GpsInfoActivity.DELAY_MILLISECONDS;
 
 import android.app.Activity;
 import android.hardware.usb.UsbManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.Nullable;
 
+/**
+ * Started by the system when a matching USB device is attached: USB_DEVICE_ATTACHED is only
+ * ever delivered to an activity, never to a broadcast receiver. This activity has no window of
+ * its own — the theme is floating, translucent, without background, preview or animation — so
+ * nothing is drawn. Its only job is to start the provider service, which Android 12+ allows
+ * only while the app is in the foreground.
+ */
 public class TransparentActivity extends Activity {
+    private static final long FINISH_DELAY_MS = 300;
+
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         startGpsProvider(this);
-        if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(getIntent().getAction())) {
-            // Create a Handler associated with the main Looper
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Finish the activity after the delay
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                        if (!isFinishing() && !isDestroyed()) {
-                            finish();
-                        }
-                    } else if (!isFinishing()) {
-                        finish();
-                    }
-                }
-            }, DELAY_MILLISECONDS);
-        }
+
+        long delay = UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(getIntent().getAction())
+                ? FINISH_DELAY_MS
+                : 0;
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                finishAndRemoveTask();
+            }
+        }, delay);
     }
 }

@@ -37,10 +37,11 @@ and injects it into Android as a mock location provider, so no other app needs t
 
 On top of the v3.x upstream code this fork adds head-unit friendly behaviour:
 
-- **Auto start on USB attachment** — a transparent activity starts the provider service as
-  soon as a matching USB GPS is plugged in and returns to the home screen, so nothing has to
-  be tapped and the app UI never gets in the way.
-- **No USB permission prompts** on attach for the supported receivers.
+- **Auto start on USB attachment** — a windowless activity starts the provider service as soon
+  as a matching USB GPS is plugged in. It is launched by the system (USB attach intents can only
+  be delivered to an activity, never to a broadcast receiver), has a floating, fully transparent
+  window with no preview and no animation, and removes its task about 300 ms later, so nothing
+  is drawn and the launcher never gets covered.
 - **Extra USB VID/PID entries** in the attach filter for the serial receivers found in
   car head units.
 - Tested on the **Geely Monjaro (2025)** head unit.

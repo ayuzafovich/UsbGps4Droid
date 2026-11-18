@@ -5,12 +5,8 @@ import static org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderSer
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.hardware.usb.UsbManager;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.SwitchCompat;
 import android.text.TextUtils;
@@ -41,7 +37,6 @@ import java.util.Locale;
 
 public class GpsInfoActivity extends USBGpsBaseActivity implements
         USBGpsApplication.ServiceDataListener {
-    public static final int DELAY_MILLISECONDS = 3000;
     private SharedPreferences sharedPreferences;
     private static final String TAG = GpsInfoActivity.class.getSimpleName();
 
@@ -82,31 +77,6 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         if (isDoublePanel()) {
             showSettingsFragment(R.id.settings_holder, false);
         }
-
-        if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(getIntent().getAction())) {
-            // Create a Handler associated with the main Looper
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Finish the activity after the delay
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                        if (!isFinishing() && !isDestroyed()) {
-                            hide();
-                        }
-                    } else if (!isFinishing()) {
-                        hide();
-                    }
-                }
-            }, DELAY_MILLISECONDS);
-        }
-    }
-
-    private void hide() {
-        //org.broeuschmeul.android.gps.usb.provider.OPEN_TRANSPARENT_ACTIVITY
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
     }
 
     private void setupUI() {
