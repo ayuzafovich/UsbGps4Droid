@@ -19,12 +19,35 @@ android {
         }
     }
 
+    def signingProps = new Properties()
+    def signingPropsFile = rootProject.file('local.properties')
+    if (signingPropsFile.exists()) {
+        signingPropsFile.withInputStream { signingProps.load(it) }
+    }
+    def signingValue = { String key, String fallback ->
+        System.getenv(key.replace('.', '_').toUpperCase()) ?: signingProps.getProperty(key) ?: fallback
+    }
+    def releaseStoreFile = signingValue('release.storeFile', 'keys/key')
+    def releaseStorePassword = signingValue('release.storePassword', null)
+    def releaseKeyAlias = signingValue('release.keyAlias', null)
+    def releaseKeyPassword = signingValue('release.keyPassword', null)
+    def hasReleaseSigning = releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
+    if (!hasReleaseSigning) {
+        logger.warn('Release signing credentials are missing: set release.storeFile, ' +
+                'release.storePassword, release.keyAlias and release.keyPassword in local.properties ' +
+                '(or RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, ' +
+                'RELEASE_KEY_PASSWORD environment variables). The release build will be unsigned.')
+    }
+
     signingConfigs {
         release {
-            storeFile file("../locationbroker.jks")
-            storePassword "locationbroker2026"
-            keyAlias "upload"
-            keyPassword "locationbroker2026"
+            if (hasReleaseSigning) {
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
         }
     }
 
@@ -32,7 +55,9 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
