@@ -53,3 +53,6 @@ freeline_project_description.json
 
 app/release/
 .DS_Store
+/gradle/gradle-daemon-jvm.properties
+/keys/key
+/Install/useful.cmd.txt
